@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/XanhNow.Gateway.Api/XanhNow.Gateway.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/XanhNow.Gateway.Api.Tests/XanhNow.Gateway.Api.Tests.csproj" />
+  </Folder>
+</Solution>
