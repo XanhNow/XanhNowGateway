@@ -8,6 +8,11 @@ using XanhNow.Gateway.Api.Proxy;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 536_870_912;
+});
+
 builder.Services.Configure<GatewayOptions>(builder.Configuration.GetSection(GatewayOptions.SectionName));
 builder.Services.AddSingleton<AssetLinksResponseFactory>();
 builder.Services.AddSingleton<ReverseProxyHandler>();

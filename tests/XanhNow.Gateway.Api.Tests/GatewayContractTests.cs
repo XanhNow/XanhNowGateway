@@ -43,10 +43,10 @@ public sealed class ReverseProxyHandlerTests
     public void MatchRoute_prefers_longest_prefix()
     {
         var route = ReverseProxyHandler.MatchRoute(
-            "/api/security/api/v1/auth/register",
+            "/security/api/v1/auth/register",
             [
-                new GatewayRouteOptions { Name = "api-root", Prefix = "/api", DestinationBaseAddress = "http://localhost:1" },
-                new GatewayRouteOptions { Name = "security", Prefix = "/api/security", DestinationBaseAddress = "http://localhost:5068" }
+                new GatewayRouteOptions { Name = "root", Prefix = "/", DestinationBaseAddress = "http://localhost:1" },
+                new GatewayRouteOptions { Name = "security", Prefix = "/security", DestinationBaseAddress = "http://localhost:5068" }
             ]);
 
         Assert.NotNull(route);
@@ -61,23 +61,25 @@ public sealed class ReverseProxyHandlerTests
             DeniedDirectPrefixes = ["/api/customer", "/api/object-storage", "/customer", "/object-storage"],
             Routes =
             [
-                new GatewayRouteOptions { Name = "security", Prefix = "/api/security", DestinationBaseAddress = "http://localhost:5068" }
+                new GatewayRouteOptions { Name = "security", Prefix = "/security", DestinationBaseAddress = "http://localhost:5068" },
+                new GatewayRouteOptions { Name = "admin", Prefix = "/admin", DestinationBaseAddress = "http://localhost:5188" }
             ]
         };
 
-        Assert.Single(options.Routes);
+        Assert.Equal(2, options.Routes.Count);
         Assert.Equal("security", options.Routes[0].Name);
+        Assert.Equal("admin", options.Routes[1].Name);
         Assert.Contains("/api/customer", options.DeniedDirectPrefixes);
         Assert.Contains("/api/object-storage", options.DeniedDirectPrefixes);
     }
 
     [Fact]
-    public void BuildTargetUri_strips_gateway_api_security_prefix_and_preserves_query_string()
+    public void BuildTargetUri_strips_gateway_security_prefix_and_preserves_query_string()
     {
         var context = new DefaultHttpContext();
         context.Request.Scheme = "https";
         context.Request.Host = new HostString("api.ioxy.site");
-        context.Request.Path = "/api/security/api/v1/auth/register";
+        context.Request.Path = "/security/api/v1/auth/register";
         context.Request.QueryString = new QueryString("?draft=true");
 
         var uri = ReverseProxyHandler.BuildTargetUri(
@@ -85,11 +87,33 @@ public sealed class ReverseProxyHandlerTests
             new GatewayRouteOptions
             {
                 Name = "security",
-                Prefix = "/api/security",
+                Prefix = "/security",
                 DestinationBaseAddress = "http://localhost:5068",
                 StripPrefix = true
             });
 
         Assert.Equal("http://localhost:5068/api/v1/auth/register?draft=true", uri.ToString());
+    }
+
+    [Fact]
+    public void BuildTargetUri_strips_gateway_admin_prefix_and_preserves_query_string()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Scheme = "https";
+        context.Request.Host = new HostString("api.ioxy.site");
+        context.Request.Path = "/admin/admin/recovery/users";
+        context.Request.QueryString = new QueryString("?phone=%2B84901234567");
+
+        var uri = ReverseProxyHandler.BuildTargetUri(
+            context.Request,
+            new GatewayRouteOptions
+            {
+                Name = "admin",
+                Prefix = "/admin",
+                DestinationBaseAddress = "http://localhost:5188",
+                StripPrefix = true
+            });
+
+        Assert.Equal("http://localhost:5188/admin/recovery/users?phone=%2B84901234567", uri.ToString());
     }
 }
