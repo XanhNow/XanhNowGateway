@@ -1,0 +1,20 @@
+[Unit]
+Description=XanhNow Gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xanhnow
+Group=xanhnow
+WorkingDirectory=/srv/xanhnow/apps/xanhnow-gateway/current
+ExecStart=/usr/bin/dotnet /srv/xanhnow/apps/xanhnow-gateway/current/XanhNow.Gateway.Api.dll
+Restart=always
+RestartSec=5
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+
+[Install]
+WantedBy=multi-user.target
+
